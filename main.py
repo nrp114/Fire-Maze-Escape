@@ -211,6 +211,7 @@ if __name__ == '__main__':
     printLine(visited)
     print("-----------------")
     printLine(grid)
+
     #start = time.time()
     #var1, var2 = (dfs(grid, dim, visited))
     #print(var2)
