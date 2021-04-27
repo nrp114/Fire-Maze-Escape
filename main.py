@@ -1,5 +1,6 @@
 import random
 import time
+import copy
 import numpy as np
 from heapq import heapify, heappush, heappop
 
@@ -41,6 +42,27 @@ def create_grid(dim, p):
     return grid
 
 
+def create_fire_grid(dim, p, check):
+    grid = []
+    for i in range(dim):
+        col = []
+        for j in range(dim):
+            num = random.random()
+            num2 = random.random()
+            if num <= p:
+                col.append(1)
+            else:
+                col.append(0)
+        grid.append(col)
+    if check:
+        x = random.randint(0, dim - 1)
+        y = random.randint(0, dim - 1)
+        grid[x][y] = 4
+    grid[0][0] = 0
+    grid[-1][-1] = 0
+    return grid
+
+
 def h_value(coordinate, dimension):
     row = coordinate[0]
     col = coordinate[1]
@@ -60,18 +82,18 @@ def find(heap, coord):
     return -1
 
 
-def a_star(grid, dim, visited):
+def a_star(grid, dim, visited,start_node,end_node):
     closed = []
     heap = []
     heapify(heap)
-    first_anode = a_node(0, [0, 0], None, 0, h_value([0, 0], dim))
+    first_anode = a_node(0, start_node, None, 0, h_value(start_node, dim))
     heappush(heap, first_anode)
     time_counter = 0
     while len(heap) != 0:
         curr_node = heappop(heap)
-        print(curr_node)
+        #print(curr_node)
         [row, col] = curr_node.coord
-        if row == dim - 1 and col == dim - 1:
+        if [row,col] == end_node:
             while curr_node != None:
                 grid[curr_node.coord[0]][curr_node.coord[1]] = 2
                 curr_node = curr_node.parent
@@ -80,14 +102,14 @@ def a_star(grid, dim, visited):
         for direction in dir:
             x = row + direction[0]
             y = col + direction[1]
-            if x < 0 or x >= dim or y < 0 or y >= dim or grid[x][y] == 1 or [x, y] in closed:
+            if x < 0 or x >= dim or y < 0 or y >= dim or grid[x][y] == 1 or [x, y] in closed or grid[x][y] == 4:
                 continue
             time_counter += 1
             if visited[x][y]:
-                print("Here")
+                #print("Here")
                 idx = find(heap, [x, y])
                 if idx != -1 and heap[idx].aval > curr_node.aval+1:
-                    print("Here123")
+                    #print("Here123")
                     heap[idx].aval = curr_node.aval+1
                     heap[idx].parent = curr_node
                     heap[idx].hval = h_value([x, y], dim) + curr_node.aval + 1
@@ -180,11 +202,91 @@ def dfs1(grid, dim):
     print(grid)
 
 
+def strategy1(astar_grid,dim, grid,q):
+    i=0
+    j=0
+    grid[i][j] = 2
+    dirr = [[0, 1], [1, 0], [-1, 0], [0, -1]]
+    while i != dim-1 and j!= dim -1:
+        for direction in dirr:
+            x = i + direction[0]
+            y = j + direction[1]
+            if x >= 0 and x < dim and y >= 0 and y < dim and astar_grid[x][y] == 2:
+                grid = fire_spread(grid,dim,q)
+                if grid[x][y] == 4:
+                    # if on fire
+                    print("Player burned")
+                    return grid,True
+                grid[x][y] = 2
+                i = x
+                j =y
+                break
+        yield grid,False
+    return grid,True
+
+
+def strategy2(astar_grid,dim, grid,q):
+    i = 0
+    j = 0
+    grid[i][j] = 2
+    # visited_copy = copy.deepcopy(visited)
+    # astar_grid = copy.deepcopy(astar_grid)
+    dirr = [[0, 1], [1, 0], [-1, 0], [0, -1]]
+    while i != dim - 1 and j != dim - 1:
+        print()
+        printLine(grid)
+        print("--")
+        visited = create_visited(dim)
+        astar_check = a_star(astar_grid,dim,visited,[i,j],[dim-1,dim-1])
+        if astar_check:
+            for direction in dirr:
+                x = i + direction[0]
+                y = j + direction[1]
+                if x >= 0 and x < dim and y >= 0 and y < dim and astar_grid[x][y] == 2:
+                    grid[i][j] = 2
+                    i = x
+                    j = y
+                    grid = fire_spread(grid,dim,q)
+                    astar_grid = copy.deepcopy(grid)
+                    break
+        else:
+            return False
+    grid[x][y] = 2
+    grid[-1][-1] = 2
+    return True
+
+
+def create_visited(dim):
+    visited = []
+    for i in range(dim):
+        col = []
+        for j in range(dim):
+            col.append(False)
+        visited.append(col)
+    return visited
 
 
 def printLine(printG):
     for i in range(len(printG)):
         print(printG[i])
+
+
+def fire_spread(grid,dim,q):
+    grid_copy = copy.deepcopy(grid)
+    dirr = [[0, 1], [1, 0], [-1, 0], [0, -1]]
+    for i in range(dim):
+        for j in range(dim):
+            if grid[i][j] != 4 and grid[i][j] != 1:
+                neighbour_fire_count = 0
+                for direction in dirr:
+                    x = i + direction[0]
+                    y = j + direction[1]
+                    if x >= 0 and x < dim and y >= 0 and y < dim and grid[x][y] == 4:
+                        neighbour_fire_count +=1
+                prob = 1-((1-q)**neighbour_fire_count)
+                if random.random() <= prob:
+                    grid_copy[i][j] = 4
+    return grid_copy
 
 
 if __name__ == '__main__':
@@ -198,18 +300,22 @@ if __name__ == '__main__':
         exit(-1)
     grid = create_grid(dim, prob)
 
-    visited = []
-    for i in range(dim):
-        col = []
-        for j in range(dim):
-            col.append(False)
-        visited.append(col)
+    visited = create_visited(dim)
     #printLine(grid)
-
+    #printLine(grid)
+    #a_star(grid, dim, visited)
+    #printLine(grid)
+    #exit(0)
+    q = 0.1
     printLine(grid)
-    a_star(grid, dim, visited)
-    printLine(visited)
     print("-----------------")
+    # a_star(a_star_grid,dim,visited,[0,0],[dim-1,dim-1])
+    # exit(0)
+    grid = create_fire_grid(dim,0.1,True)
+    printLine(grid)
+    print("-----------------")
+    a_star_grid = copy.deepcopy(grid)
+    strategy2(a_star_grid,dim,grid,q)
     printLine(grid)
 
     #start = time.time()
