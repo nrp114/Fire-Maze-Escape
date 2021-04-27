@@ -15,6 +15,7 @@ the path between start and end position.
 
 **NOTE: Red color boxes are the open path and white color boxes are the obstacles.**
 
-Video to demonstrate the working or Basic agents vs Improved Agents
+Video to demonstrate the working or Basic agents vs Improved Agents : - https://youtu.be/EnwLSRm0tdA
 
-[![https://youtu.be/EnwLSRm0tdA](https://i9.ytimg.com/vi_webp/EnwLSRm0tdA/mqdefault.webp?time=1619551800000&sqp=CLjMoYQG&rs=AOn4CLB_UW40kBQoJ4sYOt6G2uCQqWdBxA)](https://youtu.be/EnwLSRm0tdA)
+
+[![...](https://i9.ytimg.com/vi_webp/EnwLSRm0tdA/mqdefault.webp?time=1619551800000&sqp=CLjMoYQG&rs=AOn4CLB_UW40kBQoJ4sYOt6G2uCQqWdBxA)](https://youtu.be/EnwLSRm0tdA)
